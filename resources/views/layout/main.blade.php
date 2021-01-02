@@ -14,8 +14,8 @@
 </head>
 <body>
   <div class="ui left fixed vertical inverted menu" id="side-menu">
-    <div class="item">
-      {{-- <img class="ui mini image" src="./icon/icons8-location-64.png"> --}}
+    <div class="header item">
+      Map and Weather
     </div>
     <a class="item" href="{{ url('/map') }}">
       <i class="map icon"></i>

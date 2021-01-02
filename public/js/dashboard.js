@@ -8,7 +8,6 @@ function getGradient(imagefile, rot) {
   if (rot == 90)
     return `linear-gradient(${rot}deg, rgba(0,0,0,0.5) 0%, rgba(255,255,255,0.17969194513742992) 100%),
       url('./image/${imagefile}') center center no-repeat`;
-  
   else if (rot == 180)
     return `linear-gradient(${rot}deg, rgba(0,0,0,0.87156869583771) 0%, rgba(255,255,255,0.20770314961922265) 100%),
       url('./image/${imagefile}') no-repeat center center`;
@@ -25,6 +24,9 @@ function getCardHTML(dt) {
               <div class="description">
                 ${dt.weather}, ${dt.desc}
               </div>
+            </div>
+            <div class="ui blue fast bottom attached filling indeterminate progress">
+              <div class="bar"></div>
             </div>`;
   return ret;
 }
@@ -67,16 +69,32 @@ function updateMyLocation(latlng) {
 }
 
 function updatePinnedWeather(data) {
+  $('#weather-info-card .progress').addClass('indeterminate');
+  
   let weatherdata = {
     temperature: data.main.temp,
     place: data.name,
     country: data.sys.country,
     weather: data.weather[0].main,
     desc: data.weather[0].description,
+    pressure: data.main.pressure + ' hPa',
+    humidity: data.main.humidity + '%',
+    clouds: data.clouds.all + '%',
+    wind: data.wind.speed + ' m/sec',
   };
   
   let cardHTML = getCardHTML(weatherdata);
   $('#weather-info-card').html(cardHTML);
+
+  // update details
+  $('#details-wind').html(weatherdata.wind);
+  $('#details-pressure').html(weatherdata.pressure);
+  $('#details-humidity').html(weatherdata.humidity);
+  $('#details-clouds').html(weatherdata.clouds);
+
+  setTimeout(() => {
+    $('#weather-info-card .progress').removeClass('indeterminate');
+  }, 1000);
 
   // setting bg
   $('#weather-info-card').css('background', getGradient(getImageWeather(weatherdata.weather), 90));
@@ -85,7 +103,6 @@ function updatePinnedWeather(data) {
 
 function onMapClick(event) {
   if (mapmarker) mapmarker.remove();
-  
   let {lat, lng} = event.latlng;
   mapmarker = L.marker(event.latlng).addTo(maplayer);
   
@@ -135,6 +152,9 @@ function changeMapView() {
       break;
     case 'satellite-view':
       tilelayer = createTileLayer(MAP_SATELLITE_VIEW);
+      break;
+    case 'satellite-street-view':
+      tilelayer = createTileLayer(MAP_SATELLITE_STREET_VIEW);
       break;
   }
   tilelayer.addTo(maplayer);

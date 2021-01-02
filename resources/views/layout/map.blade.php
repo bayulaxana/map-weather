@@ -6,11 +6,12 @@
   <select class="ui item selection dropdown" id="map-view-select" onchange="changeMapView()">
     <option selected value="street-view">Street View</option>
     <option value="satellite-view">Satellite View</option>
+    <option value="satellite-street-view">Dual View</option>
   </select>
   <div class="right item">
     <div class="ui action input">
       <input type="text" placeholder="Search place" id="search-loc-input">
-      <div class="ui button" onclick="searchLocation(event)">Go</div>
+      <div class="ui button blue" onclick="searchLocation(event)">Go</div>
     </div>
   </div>
 </div>

@@ -1,6 +1,7 @@
 const ACCESS_TOKEN = 'pk.eyJ1IjoiYmF5dWxheGFuYSIsImEiOiJja2phejB0bnYyY3pjMnBudnhkNjByYTYzIn0.Hwr5bsW7j420s1yI6U1brA';
 const MAP_STREET_VIEW = 'mapbox/streets-v11';
 const MAP_SATELLITE_VIEW = 'mapbox/satellite-v9';
+const MAP_SATELLITE_STREET_VIEW = 'mapbox/satellite-streets-v11';
 const DEFAULT_ZOOM_LEVEL = 13;
 const DEFAULT_MAP_VIEW = MAP_STREET_VIEW;
 

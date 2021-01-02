@@ -34,6 +34,27 @@
   let mapmarker = null;
   L.control.zoom({ position: 'bottomright' }).addTo(maplayer);
 
+  function changeMapView() {
+    let mapViewBox = $('#map-view-select');
+    if (!maplayer.hasLayer(tilelayer)) {
+      return;
+    }
+
+    maplayer.removeLayer(tilelayer);
+    switch (mapViewBox.val()) {
+      case 'street-view':
+        tilelayer = createTileLayer(MAP_STREET_VIEW);
+        break;
+      case 'satellite-view':
+        tilelayer = createTileLayer(MAP_SATELLITE_VIEW);
+        break;
+      case 'satellite-street-view':
+        tilelayer = createTileLayer(MAP_SATELLITE_STREET_VIEW);
+        break;
+    }
+    tilelayer.addTo(maplayer);
+  }
+
   function searchLocation(event) {
     let loc = $('#search-loc-input').val();
     
