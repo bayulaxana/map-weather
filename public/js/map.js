@@ -41,6 +41,11 @@ function getForwardGeocodingAPI(location) {
   return api;
 }
 
+function getDirectionAPI(src, dst) {
+  let apistr = `https://api.mapbox.com/directions/v5/mapbox/driving/${src.lng},${src.lat};${dst.lng},${dst.lat}?alternatives=false&geometries=geojson&steps=false&access_token=${ACCESS_TOKEN}`;
+  return apistr;
+}
+
 /**
  * 
  * @param {string} mapview

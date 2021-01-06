@@ -31,34 +31,12 @@ function getCardHTML(dt) {
   return ret;
 }
 
-function searchLocation(event) {
-  let loc = $('#search-loc-input').val();
-  
-  if (loc == '' || !loc) {
-    $('body').toast({
-      message: 'Empty string..',
-      showProgress: 'bottom',
-      classProgress: 'yellow',
-    });
-    return;
-  }
-
+function goToLocation(lat, lng) {
   $('#map-segment').addClass('double loading');
-  let api = getForwardGeocodingAPI(loc);
-  fetch(api)
-    .then((resp) => {
-      return resp.json();
-    })
-    .then((data) => {      
-      let result = data.features[0];
-      let lng = result.center[0];
-      let lat = result.center[1];
-      maplayer.flyTo([lat, lng], DEFAULT_ZOOM_LEVEL);
-
-      setTimeout(() => {
-        $('#map-segment').removeClass('double loading');
-      }, 1000);
-    });
+  setTimeout(() => {
+    $('#map-segment').removeClass('double loading');
+    maplayer.flyTo([lat, lng], DEFAULT_ZOOM_LEVEL);
+  }, 1000);
 }
 
 function updateMyLocation(latlng) {
@@ -70,6 +48,7 @@ function updateMyLocation(latlng) {
 
 function updatePinnedWeather(data) {
   $('#weather-info-card .progress').addClass('indeterminate');
+  $('#weather-details').addClass('loading');
   
   let weatherdata = {
     temperature: data.main.temp,
@@ -91,8 +70,9 @@ function updatePinnedWeather(data) {
   $('#details-pressure').html(weatherdata.pressure);
   $('#details-humidity').html(weatherdata.humidity);
   $('#details-clouds').html(weatherdata.clouds);
-
+  
   setTimeout(() => {
+    $('#weather-details').removeClass('loading');
     $('#weather-info-card .progress').removeClass('indeterminate');
   }, 1000);
 
@@ -104,6 +84,7 @@ function updatePinnedWeather(data) {
 function onMapClick(event) {
   if (mapmarker) mapmarker.remove();
   let {lat, lng} = event.latlng;
+  console.log(lat, lng);
   mapmarker = L.marker(event.latlng).addTo(maplayer);
   
   getWeatherInfo(lat, lng)

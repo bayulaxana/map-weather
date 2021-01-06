@@ -7,3 +7,7 @@
     display: flex;
     flex-direction: column;
 }
+
+a.result .content {
+    margin: 0;
+}

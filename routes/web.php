@@ -21,6 +21,10 @@ Route::get('/weather', function () {
     return view('weather');
 });
 
+Route::get('/direction', function() {
+    return view('direction');
+});
+
 Route::get('/map', function() {
     return view('fullmap');
 });

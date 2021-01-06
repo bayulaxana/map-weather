@@ -5,12 +5,6 @@
 @endsection
 @section('internal-style')
 <style>
-  #trip-list {
-    /* height: 70vh;
-    max-height: 70vh; */
-    /* overflow-y: scroll; */
-  }
-
   .weather.card.inverted {
     background: rgb(0,0,0);
     box-shadow: none;
@@ -61,7 +55,7 @@
         </div>
       </div>
       <div class="ui divider"></div>
-      <div class="ui padded segment" id="trip-list">
+      <div class="ui padded segment" id="weather-details">
         <h3>Details</h3>
         <!-- Item -->
         <div class="ui divided items">
@@ -114,5 +108,39 @@
 <script src="{{ asset('/js/dashboard.js') }}"></script>
 <script>
   $('.ui.progress').progress();
+
+  let apiSettings = {
+      url: `https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json?autocomplete=false&access_token=${ACCESS_TOKEN}`,
+      onResponse: function(resp) {
+        let response = {
+          "results": [],
+        };
+
+        $.each(resp.features, function(index, item) {
+          let text = item.text;
+          let placeName = item.place_name;
+          let lat = item.center[1];
+          let lng = item.center[0];
+
+          response["results"].push({
+            "title": text,
+            "description": placeName,
+            lat: lat,
+            lng: lng,
+          });
+        });
+        return response;
+      }
+    };
+
+    $('.ui.search')
+      .search({
+        type: 'standard',
+        minCharacters: 3,
+        apiSettings: apiSettings,
+        onSelect: function(result, response) {
+          goToLocation(result.lat, result.lng);
+        }
+      });
 </script>
 @endsection

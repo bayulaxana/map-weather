@@ -21,6 +21,10 @@
       <i class="map icon"></i>
       Map
     </a>
+    <a class="item" href="{{ url('/direction') }}">
+      <i class="location arrow icon"></i>
+      Direction
+    </a>
     <a class="item" href="{{ url('/weather') }}">
       <i class="cloud icon"></i>
       Weather
