@@ -52,11 +52,16 @@ let apiSettings = {
 
 let [maplayer, tilelayer] = initializeMap('mapid');
 L.control.zoom({ position: 'bottomright' }).addTo(maplayer);
+maplayer.on('click', onMapClick);
 
 // Handle source location
 function onSourceSelected(res, resp) {
   if (res.variation == locVariation.CHOOSE_ON_MAP) return;
   G.coordSrc = {lat: res.lat, lng: res.lng};
+
+  if (G.markerSrc) G.markerSrc.remove(), G.markerSrc = null;
+  G.markerSrc = L.marker([res.lat, res.lng]).addTo(maplayer);
+  resetGeoJson();
 
   $('#search-loc-input-2').removeClass('disabled');
 }
@@ -65,6 +70,93 @@ function onSourceSelected(res, resp) {
 function onDestinationSelected(res, resp) {
   if (res.variation == locVariation.CHOOSE_ON_MAP) return;
   G.coordDst = {lat: res.lat, lng: res.lng};
+
+  if (G.markerDst) G.markerDst.remove(), G.markerDst = null;
+  G.markerDst = L.marker([res.lat, res.lng]).addTo(maplayer);
+
+  let api = getDirectionAPI(G.coordSrc, G.coordDst);
+  getDirection(api)
+    .then(direction => {
+      G.directionResult = direction;
+      updateMapDirection(direction);
+    });
+}
+
+function resetGeoJson() {
+  if (G.geoJSONLayer) G.geoJSONLayer.remove(), G.geoJSONLayer = null;
+}
+
+function resetMap() {
+  if (G.markerSrc) G.markerSrc.remove(), G.markerSrc = null;
+  if (G.markerDst) G.markerDst.remove(), G.markerDst = null;
+  if (G.geoJSONLayer) G.geoJSONLayer.remove(), G.geoJSONLayer = null;
+}
+
+// update the map layer
+function updateMapDirection(direction) {
+  resetGeoJson();
+  let route = null;
+
+  for (let i=0; i < direction.routes.length; i++) {
+    route = direction.routes[i];
+    break;
+  }
+
+  let geometry = route.geometry;
+  let sortedByLongitude = geometry.coordinates.map(item => item);
+  let sortedByLatitude = geometry.coordinates.map(item => item);
+
+  sortedByLatitude.sort((a, b) => {
+    return a[1] > b[1];
+  });
+
+  sortedByLongitude.sort((a, b) => {
+    return a[0] > b[0];
+  });
+
+  let minLat = sortedByLatitude[0][1];
+  let maxLat = sortedByLatitude[sortedByLatitude.length - 1][1];
+  let minLng = sortedByLongitude[0][0];
+  let maxLng = sortedByLongitude[sortedByLongitude.length - 1][0];
+
+  // bounds
+  let corner1 = L.latLng(minLat, minLng);
+  let corner2 = L.latLng(maxLat, maxLng);
+  let bounds = L.latLngBounds(corner1, corner2);
+  let layerStyle = {"color": "#2962ff", "weight": 7,};
+
+  let duration = Math.ceil(route.duration/60);
+  let distance = Math.ceil(route.distance/1000);
+  let html =
+    `<p><b>Estimated time: </b>${duration} minute(s)</p>
+    <p><b>Approximate distance: </b>${distance} km</p>`;
+
+  G.geoJSONLayer = L.geoJSON(geometry, {style: layerStyle}).addTo(maplayer);
+  G.geoJSONLayer.bindTooltip(html);
+  maplayer.flyToBounds(bounds);
+}
+
+function onMapClick(event) {
+  if (G.markerSrc && G.markerDst) {
+    console.log("reset");
+    resetMap();
+  }
+
+  let res = {
+    lat: event.latlng.lat,
+    lng: event.latlng.lng,
+  };
+  
+  if (G.markerSrc) {
+    G.markerDst = L.marker(event.latlng).addTo(maplayer);
+    G.markerDst.bindPopup("Dest");
+    onDestinationSelected(res, null);
+    return;
+  }
+
+  G.markerSrc = L.marker(event.latlng).addTo(maplayer);
+  G.markerSrc.bindPopup("Src");
+  onSourceSelected(res, null);
 }
 
 async function getDirection(api) {
@@ -76,7 +168,6 @@ async function getDirection(api) {
 $('#search-loc-input-1')
   .search({
     type: 'standard',
-    minCharacters: 3,
     apiSettings: apiSettings,
     onSelect: onSourceSelected,
   });
@@ -84,209 +175,41 @@ $('#search-loc-input-1')
 $('#search-loc-input-2')
   .search({
     type: 'standard',
-    minCharacters: 3,
     apiSettings: apiSettings,
     onSelect: onDestinationSelected,
   });
 
-let geoJSON = {
-  "routes": [
-    {
-      "weight_name": "auto",
-      "weight": 2129.422,
-      "duration": 1539.751,
-      "distance": 8216.869,
-      "legs": [
-        {
-          "steps": [],
-          "admins": [
-            {
-              "iso_3166_1_alpha3": "IDN",
-              "iso_3166_1": "ID"
-            }
-          ],
-          "duration": 1539.751,
-          "distance": 8216.869,
-          "weight": 2129.422,
-          "summary": "Jalan Ngaglik, Jalan Putro Agung"
-        }
-      ],
-      "geometry": {
-        "coordinates": [
-          [
-            112.737221,
-            -7.247883
-          ],
-          [
-            112.736685,
-            -7.247732
-          ],
-          [
-            112.736896,
-            -7.24693
-          ],
-          [
-            112.741984,
-            -7.247625
-          ],
-          [
-            112.742827,
-            -7.2456
-          ],
-          [
-            112.742771,
-            -7.244831
-          ],
-          [
-            112.747482,
-            -7.244578
-          ],
-          [
-            112.751401,
-            -7.24558
-          ],
-          [
-            112.75056,
-            -7.248646
-          ],
-          [
-            112.750648,
-            -7.248951
-          ],
-          [
-            112.755441,
-            -7.249286
-          ],
-          [
-            112.757901,
-            -7.248666
-          ],
-          [
-            112.767596,
-            -7.251113
-          ],
-          [
-            112.768708,
-            -7.248707
-          ],
-          [
-            112.769148,
-            -7.242281
-          ],
-          [
-            112.776401,
-            -7.223172
-          ],
-          [
-            112.777047,
-            -7.220116
-          ],
-          [
-            112.777235,
-            -7.220142
-          ],
-          [
-            112.776847,
-            -7.222102
-          ]
-        ],
-        "type": "LineString"
-      }
-    }
-  ],
-  "waypoints": [
-    {
-      "distance": 12.285,
-      "name": "Jalan Kawatan VI",
-      "location": [
-        112.737221,
-        -7.247883
-      ]
-    },
-    {
-      "distance": 4.96,
-      "name": "Jalan Haji Mohammad Noer",
-      "location": [
-        112.776847,
-        -7.222102
-      ]
-    }
-  ],
-  "code": "Ok",
-  "uuid": "n_DcRg_Z1C7_ys9s02TwteOHGHDlzKYW70YBNjUG7UMf6oMeGNTHxw=="
-};
+// L.Control.MyControl = L.Control.extend({
+//   onAdd: function(map) {
+//     var el = L.DomUtil.create('div', 'ui card');
 
-let route = null;
-for (let i=0; i < geoJSON.routes.length; i++) {
-  route = geoJSON.routes[i];
-  break;
-}
+//     el.innerHTML =
+//       `<div class="content">
+//         <div class="header">Project Timeline</div>
+//         <div class="ui items">
+//           <div class="item">
+//             <div class="ui mini image">
+//               <img src="{{ asset('/image/icon/wind.png') }}" alt="">
+//             </div>
+//             <div class="middle aligned content">
+//               <div class="header" id="details-wind">Unavailable</div>
+//             <div class="metadata">Wind</div>
+//           </div>
+//         </div>
+//         </div>
+//       </div>`;
 
-let geometry = route.geometry;
-let sortedByLongitude = geometry.coordinates.map(item => item);
-let sortedByLatitude = geometry.coordinates.map(item => item);
+//     return el;
+//   },
 
-sortedByLatitude.sort((a, b) => {
-  return a[1] > b[1];
-});
+//   onRemove: function(map) {
+//     // Nothing to do here
+//   }
+// });
 
-sortedByLongitude.sort((a, b) => {
-  return a[0] > b[0];
-});
-
-let minLat = sortedByLatitude[0][1];
-let maxLat = sortedByLatitude[sortedByLatitude.length - 1][1];
-let minLng = sortedByLongitude[0][0];
-let maxLng = sortedByLongitude[sortedByLongitude.length - 1][0];
-
-// bounds
-let corner1 = L.latLng(minLat, minLng);
-let corner2 = L.latLng(maxLat, maxLng);
-let bounds = L.latLngBounds(corner1, corner2);
-
-let myStyle = {
-  "color": "#1A73E8",
-  "weight": 7,
-};
-
-let geoJSONLayer = L.geoJSON(geometry, {
-  style: myStyle,
-}).addTo(maplayer);
-
-maplayer.flyToBounds(bounds);
-
-//
-L.Control.MyControl = L.Control.extend({
-  onAdd: function(map) {
-    var el = L.DomUtil.create('div', 'ui card');
-
-    el.innerHTML =
-      `<div class="content">
-        <div class="header">Project Timeline</div>
-        <div class="ui items">
-          <div class="item">
-            <div class="ui mini image">
-              <img src="{{ asset('/image/icon/wind.png') }}" alt="">
-            </div>
-            <div class="middle aligned content">
-              <div class="header" id="details-wind">Unavailable</div>
-            <div class="metadata">Wind</div>
-          </div>
-        </div>
-        </div>
-      </div>`;
-
-    return el;
-  },
-
-  onRemove: function(map) {
-    // Nothing to do here
-  }
-});
-
-L.control.myControl = function(opts) {
-  return new L.Control.MyControl(opts);
-}
+// L.control.myControl = function(opts) {
+//   return new L.Control.MyControl(opts);
+// }
 
 // L.control.myControl({
 //   position: 'topleft'

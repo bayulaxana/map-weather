@@ -52,4 +52,9 @@
 <script src="{{ asset('/js/map.js') }}"></script>
 <script src="{{ asset('/js/weather.js') }}"></script>
 <script src="{{ asset('/js/direction.js') }}"></script>
+<script>
+  $('#direction-detail').sidebar({
+    context: $('#map-segment'),
+  });
+</script>
 @endsection
