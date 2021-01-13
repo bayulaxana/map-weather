@@ -31,6 +31,7 @@
 @endsection
 
 @section('javascript')
+<script src="https://ppete2.github.io/Leaflet.PolylineMeasure/Leaflet.PolylineMeasure.js"></script>
 <script src="{{ asset('/js/map.js') }}"></script>
 <script src="{{ asset('/js/weather.js') }}"></script>
 <script src="{{ asset('/js/fullmap.js') }}"></script>

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="{{ asset('/fomantic/semantic.css') }}">
   <link rel="stylesheet" href="{{ asset('/css/global.css') }}">
   <link rel="stylesheet" href="{{ asset('/leaflet/leaflet.css') }}">
+  <link rel="stylesheet" href="https://ppete2.github.io/Leaflet.PolylineMeasure/Leaflet.PolylineMeasure.css" />
   @yield('internal-style')
 </head>
 <body>

@@ -1,5 +1,9 @@
 @extends('layout.main')
 
+@section('title')
+    Direction
+@endsection
+
 @section('internal-style')
   <style>
     #map-segment {
@@ -16,6 +20,7 @@
       flex-direction: column;
     }
   </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 @endsection
 
 @section('content')
@@ -49,6 +54,7 @@
 @endsection
 
 @section('javascript')
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 <script src="{{ asset('/js/map.js') }}"></script>
 <script src="{{ asset('/js/weather.js') }}"></script>
 <script src="{{ asset('/js/direction.js') }}"></script>

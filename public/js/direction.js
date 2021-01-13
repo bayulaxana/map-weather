@@ -16,6 +16,11 @@ let G = {
   coordDst: null,
   geoJSONLayer: null,
   directionResult: null,
+  routeLineStyle: [
+    {color: 'black', opacity: 0.15, weight: 9}, 
+    {color: 'white', opacity: 0.8, weight: 6}, 
+    {color: '#2962ff', opacity: 1, weight: 5}
+  ],
 }
 
 // Geocoding API Settings
@@ -54,6 +59,52 @@ let [maplayer, tilelayer] = initializeMap('mapid');
 L.control.zoom({ position: 'bottomright' }).addTo(maplayer);
 maplayer.on('click', onMapClick);
 
+function startRouting() {
+  if (G.directionResult != null) G.directionResult.remove();
+  
+  let opt = {
+    waypoints: [
+      L.latLng(G.coordSrc.lat, G.coordSrc.lng),
+      L.latLng(G.coordDst.lat, G.coordDst.lng),
+    ],
+    routing: L.routing.mapbox(ACCESS_TOKEN),
+    lineOptions: {
+      styles: G.routeLineStyle,
+    },
+  }
+  G.directionResult = L.Routing.control(opt).addTo(maplayer);
+  G.directionResult.on('routesfound', onRoutesFound);
+}
+
+function onRoutesFound(direction) {
+  let route = null;
+
+  for (let i=0; i < direction.routes.length; i++) {
+    route = direction.routes[i];
+    break;
+  }
+  let coordinates = route.coordinates;
+  let sortedByLatitude = coordinates.map(item => item);
+  let sortedByLongitude = coordinates.map(item => item);
+
+  sortedByLatitude.sort((a, b) => a.lat > b.lat);
+  sortedByLongitude.sort((a, b) => a.lng > b.lng);
+
+  let minLat = sortedByLatitude[0].lat;
+  let maxLat = sortedByLatitude[sortedByLatitude.length - 1].lat;
+  let minLng = sortedByLongitude[0].lng;
+  let maxLng = sortedByLongitude[sortedByLongitude.length - 1].lng;
+
+  // bounds
+  let corner1 = L.latLng(minLat, minLng);
+  let corner2 = L.latLng(maxLat, maxLng);
+  let bounds = L.latLngBounds(corner1, corner2);
+
+  maplayer.flyToBounds(bounds, {
+    paddingBottomRight: [330, 0],
+  });
+}
+
 // Handle source location
 function onSourceSelected(res, resp) {
   if (res.variation == locVariation.CHOOSE_ON_MAP) return;
@@ -61,7 +112,6 @@ function onSourceSelected(res, resp) {
 
   if (G.markerSrc) G.markerSrc.remove(), G.markerSrc = null;
   G.markerSrc = L.marker([res.lat, res.lng]).addTo(maplayer);
-  resetGeoJson();
 
   $('#search-loc-input-2').removeClass('disabled');
 }
@@ -73,13 +123,7 @@ function onDestinationSelected(res, resp) {
 
   if (G.markerDst) G.markerDst.remove(), G.markerDst = null;
   G.markerDst = L.marker([res.lat, res.lng]).addTo(maplayer);
-
-  let api = getDirectionAPI(G.coordSrc, G.coordDst);
-  getDirection(api)
-    .then(direction => {
-      G.directionResult = direction;
-      updateMapDirection(direction);
-    });
+  startRouting();
 }
 
 function resetGeoJson() {
@@ -90,50 +134,6 @@ function resetMap() {
   if (G.markerSrc) G.markerSrc.remove(), G.markerSrc = null;
   if (G.markerDst) G.markerDst.remove(), G.markerDst = null;
   if (G.geoJSONLayer) G.geoJSONLayer.remove(), G.geoJSONLayer = null;
-}
-
-// update the map layer
-function updateMapDirection(direction) {
-  resetGeoJson();
-  let route = null;
-
-  for (let i=0; i < direction.routes.length; i++) {
-    route = direction.routes[i];
-    break;
-  }
-
-  let geometry = route.geometry;
-  let sortedByLongitude = geometry.coordinates.map(item => item);
-  let sortedByLatitude = geometry.coordinates.map(item => item);
-
-  sortedByLatitude.sort((a, b) => {
-    return a[1] > b[1];
-  });
-
-  sortedByLongitude.sort((a, b) => {
-    return a[0] > b[0];
-  });
-
-  let minLat = sortedByLatitude[0][1];
-  let maxLat = sortedByLatitude[sortedByLatitude.length - 1][1];
-  let minLng = sortedByLongitude[0][0];
-  let maxLng = sortedByLongitude[sortedByLongitude.length - 1][0];
-
-  // bounds
-  let corner1 = L.latLng(minLat, minLng);
-  let corner2 = L.latLng(maxLat, maxLng);
-  let bounds = L.latLngBounds(corner1, corner2);
-  let layerStyle = {"color": "#2962ff", "weight": 7,};
-
-  let duration = Math.ceil(route.duration/60);
-  let distance = Math.ceil(route.distance/1000);
-  let html =
-    `<p><b>Estimated time: </b>${duration} minute(s)</p>
-    <p><b>Approximate distance: </b>${distance} km</p>`;
-
-  G.geoJSONLayer = L.geoJSON(geometry, {style: layerStyle}).addTo(maplayer);
-  G.geoJSONLayer.bindTooltip(html);
-  maplayer.flyToBounds(bounds);
 }
 
 function onMapClick(event) {
@@ -159,12 +159,6 @@ function onMapClick(event) {
   onSourceSelected(res, null);
 }
 
-async function getDirection(api) {
-  const response = await fetch(api);
-  const json = await response.json();
-  return json;
-}
-
 $('#search-loc-input-1')
   .search({
     type: 'standard',
@@ -178,39 +172,3 @@ $('#search-loc-input-2')
     apiSettings: apiSettings,
     onSelect: onDestinationSelected,
   });
-
-// L.Control.MyControl = L.Control.extend({
-//   onAdd: function(map) {
-//     var el = L.DomUtil.create('div', 'ui card');
-
-//     el.innerHTML =
-//       `<div class="content">
-//         <div class="header">Project Timeline</div>
-//         <div class="ui items">
-//           <div class="item">
-//             <div class="ui mini image">
-//               <img src="{{ asset('/image/icon/wind.png') }}" alt="">
-//             </div>
-//             <div class="middle aligned content">
-//               <div class="header" id="details-wind">Unavailable</div>
-//             <div class="metadata">Wind</div>
-//           </div>
-//         </div>
-//         </div>
-//       </div>`;
-
-//     return el;
-//   },
-
-//   onRemove: function(map) {
-//     // Nothing to do here
-//   }
-// });
-
-// L.control.myControl = function(opts) {
-//   return new L.Control.MyControl(opts);
-// }
-
-// L.control.myControl({
-//   position: 'topleft'
-// }).addTo(maplayer);

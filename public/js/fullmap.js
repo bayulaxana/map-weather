@@ -1,6 +1,12 @@
 let [maplayer, tilelayer] = initializeMap('mapid');
 let mapmarker = null;
+
 L.control.zoom({ position: 'bottomright' }).addTo(maplayer);
+
+L.control.polylineMeasure({
+  position: 'bottomright',
+  unit: 'metres',
+}).addTo(maplayer);
 
 let apiSettings = {
   url: `https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json?autocomplete=false&access_token=${ACCESS_TOKEN}`,
