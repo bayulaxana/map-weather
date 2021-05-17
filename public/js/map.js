@@ -1,4 +1,4 @@
-const ACCESS_TOKEN = 'pk.eyJ1IjoiYmF5dWxheGFuYSIsImEiOiJja2phejB0bnYyY3pjMnBudnhkNjByYTYzIn0.Hwr5bsW7j420s1yI6U1brA';
+const ACCESS_TOKEN = 'pk.eyJ1IjoiYmF5dWxheGFuYSIsImEiOiJja2pheXU3ajUyc3p4MzBucDVlcGFmZXFsIn0.k8xeYkPvsMmCWzakVMkTJQ';
 const MAP_STREET_VIEW = 'mapbox/streets-v11';
 const MAP_SATELLITE_VIEW = 'mapbox/satellite-v9';
 const MAP_SATELLITE_STREET_VIEW = 'mapbox/satellite-streets-v11';
